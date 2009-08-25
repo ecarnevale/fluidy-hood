@@ -23,7 +23,7 @@ h4 {font-family: Arial;}</style> \
 
 fluidDB = new Object();
 
-fluidDB.ajax = function(type, url, callback,async_req){
+fluidDB.ajax = function(type, url, callback, async_req){
     if(async_req == undefined){
       async_req = true;
     }
@@ -40,6 +40,7 @@ fluidDB.ajax = function(type, url, callback,async_req){
     });
 }
 
+//END FluidDB REST LIB
 
 // BEGIN SLIDEBAR CREATION
 jetpack.slideBar.append({
@@ -56,11 +57,9 @@ jetpack.slideBar.append({
 
 // END SLIDEBAR CREATION
 
-// BEGIN onFocus EVENT
-
-jetpack.tabs.onFocus(function() {
+function checkAboutPage(pageURL) {
     $(cb.contentDocument).find("#content").empty();
-    var query = escape('fluidDB/about="'+this.url+'"');
+    var query = escape('fluidDB/about="'+pageURL+'"');
 
     var finalURL = fluidDBURL + "objects?query=" + query;
 
@@ -84,8 +83,20 @@ jetpack.tabs.onFocus(function() {
                  //jetpack.notifications.show("you got nothing, loser...");
                }
     })
+}
 
+// BEGIN onReady EVENT
+
+jetpack.tabs.onReady(function() {
+  checkAboutPage(this.url);
 });
 
+// END onReady EVENT
+
+// BEGIN onFocus EVENT
+
+jetpack.tabs.onFocus(function(){
+  checkAboutPage(this.url);
+});
 
 // END onFocus EVENT
