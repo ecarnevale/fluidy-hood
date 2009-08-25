@@ -42,9 +42,14 @@ fluidDB.ajax = function(type, url, callback, async_req){
 
 //END FluidDB REST LIB
 
+function createNewTag(name,value){
+  return "<p><b>"+ name +"</b>: "+value+"</p>";
+}
+
 // BEGIN SLIDEBAR CREATION
 jetpack.slideBar.append({
   width: 250,
+  persist: true,
   icon: 'http://www.fluidinfo.com/favicon.ico',
   html: initialContent,
   onReady: function(slide) {
