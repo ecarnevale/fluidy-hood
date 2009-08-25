@@ -17,13 +17,14 @@ var fluidDBURL = "http://sandbox.fluidinfo.com/";
 var initialContent = '<style type="text/css"> \
 h4 {font-family: Arial;}</style> \
 <h4>Tag along</h4> \
+<div id="createObjButton" style="display:none">Create an object for this page</div>\
 <div id="content"></div>';
 
 //BEGIN FluidDB REST LIB
 
 fluidDB = new Object();
 
-fluidDB.ajax = function(type, url, callback, async_req){
+fluidDB.ajax = function(type, url, payload, callback, async_req){
     if(async_req == undefined){
       async_req = true;
     }
@@ -31,11 +32,13 @@ fluidDB.ajax = function(type, url, callback, async_req){
           async: async_req,
           beforeSend: function(xhrObj){
                   xhrObj.setRequestHeader("Accept","application/json");
+                  xhrObj.setRequestHeader("Content-Type","application/json");
           },
           contentType: "application/json",
           type: type,
           url: url,
-          processData: true,
+          data: payload,
+          processData: false,
           success: callback
     });
 }
@@ -53,7 +56,16 @@ jetpack.slideBar.append({
   icon: 'http://www.fluidinfo.com/favicon.ico',
   html: initialContent,
   onReady: function(slide) {
-    cb = slide;
+		// Creates a new object for the current url when the user clicks on the button
+		$("#createObjButton", slide.contentDocument).click(function () {
+			var pageURL = jetpack.tabs.focused.url;
+			fluidDB.ajax("POST",fluidDBURL + "objects", '{about : "'+pageURL+'"}', function(json){
+        //TODO extract tags function from checkAboutPage saving in this way a GET ;)
+        //checkAboutPage(pageURL);
+				jetpack.notifications.show(json);
+      });
+		});
+		cb = slide;
   },
   onSelect: function(slide) {
     //displayMemos($(slide.contentDocument).find("#content"));
@@ -68,16 +80,17 @@ function checkAboutPage(pageURL) {
 
     var finalURL = fluidDBURL + "objects?query=" + query;
 
-    fluidDB.ajax("GET",finalURL, function(json){
+    fluidDB.ajax("GET",finalURL, {}, function(json){
                var objectID = JSON.parse(json).ids[0];
                if(objectID){
+								 $(cb.contentDocument).find("#createObjButton").hide();
                  cb.notify();
                  var objectURL = fluidDBURL + "objects/" + objectID;
-                 fluidDB.ajax("GET", objectURL, function(jsonTags){
+                 fluidDB.ajax("GET", objectURL, {}, function(jsonTags){
                     let tags = JSON.parse(jsonTags);
                     for(let i = 0; i < tags.tagPaths.length; i++){
                         var tagName = tags.tagPaths[i];
-                        fluidDB.ajax("GET", fluidDBURL + "objects/" + objectID +"/" + tagName, function(tagValue){
+                        fluidDB.ajax("GET", fluidDBURL + "objects/" + objectID +"/" + tagName, {}, function(tagValue){
                             //jetpack.notifications.show(i);
                             $(cb.contentDocument).find("#content").append("<p><b>"+ tagName +"</b>: "+tagValue+"</p>");
                         }, false);
@@ -86,6 +99,7 @@ function checkAboutPage(pageURL) {
                  //jetpack.notifications.show(objectID);
                }else{
                  //jetpack.notifications.show("you got nothing, loser...");
+								 $(cb.contentDocument).find("#createObjButton").show();
                }
     })
 }
